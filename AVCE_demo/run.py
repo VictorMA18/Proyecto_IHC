@@ -318,8 +318,8 @@ class FER_INT_ALG():
         global encoder, regressor, disc
         
         encoder, regressor = nn_output()
-        encoder.load_state_dict(torch.load('/home/victorma/env/AVCE_FER/AVCE_demo/weights/Sparse_cont_enc.t7'), strict=False) #Cambiar esta direccion 
-        regressor.load_state_dict(torch.load('/home/victorma/env/AVCE_FER/AVCE_demo/weights/Sparse_cont_reg.t7'), strict=False) #Cambiar esta direccion
+        encoder.load_state_dict(torch.load('/home/victorma/Proyecto_IHC/AVCE_demo/weights/Sparse_cont_enc.t7'), strict=False) #Cambiar esta direccion 
+        regressor.load_state_dict(torch.load('/home/victorma/Proyecto_IHC/AVCE_demo/weights/Sparse_cont_reg.t7'), strict=False) #Cambiar esta direccion
         
         global emotion_list
         global emot_region
