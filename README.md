@@ -1,110 +1,73 @@
-# AVCE_FER
-> **Emotion-aware Multi-view Contrastive Learning for Facial Emotion Recognition (ECCV 2022)**<br>
+# This repository is deprecated for at TF-2.0 rewrite visit:
+# https://github.com/oarriaga/paz
+------------------------------------------------
+# Face classification and detection.
+Real-time face detection and emotion/gender classification using fer2013/IMDB datasets with a keras CNN model and openCV.
+* IMDB gender classification test accuracy: 96%.
+* fer2013 emotion classification test accuracy: 66%.
 
-<a href="https://releases.ubuntu.com/16.04/"><img alt="Ubuntu" src="https://img.shields.io/badge/Ubuntu-16.04-green"></a>
-<a href="https://www.python.org/downloads/release/python-370/"><img alt="PyThon" src="https://img.shields.io/badge/Python-v3.8-blue"></a>
-<a href="https://pytorch.org/get-started/locally/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white"></a>
+For more information please consult the [publication](https://github.com/oarriaga/face_classification/blob/master/report.pdf)
 
-[Daeha Kim](https://scholar.google.co.kr/citations?user=PVt7f0YAAAAJ&hl=ko), [Byung Cheol Song](https://scholar.google.co.kr/citations?user=yo-cOtMAAAAJ&hl=ko)
+# Emotion/gender examples:
 
-CVIP Lab, Inha University
+![alt tag](images/demo_results.png)
 
+Guided back-prop
+![alt tag](images/gradcam_results.png)
 
-## Real-time demo with pre-trained weights
-<p align="center">
-<img src="https://github.com/kdhht2334/AVCE_FER/blob/main/AVCE_demo/AVCE_demo_vid.gif" height="320"/>
-</p>
+Real-time demo:
+<div align='center'>
+  <img src='images/color_demo.gif' width='400px'>
+</div>
 
+[B-IT-BOTS](https://mas-group.inf.h-brs.de/?page_id=622) robotics team :)
+![alt tag](images/robocup_team.png)
 
-## Requirements
+## Instructions
 
-- Python (>=3.7)
-- PyTorch (>=1.7.1)
-- pretrainedmodels (>=0.7.4)
-- cvxpy (>=1.1.15)
-- [Wandb](https://wandb.ai/)
-- [Fabulous](https://github.com/jart/fabulous) (terminal color toolkit)
+### Run real-time emotion demo:
+> python3 video_emotion_color_demo.py
 
-To install all dependencies, do this.
+### Run real-time guided back-prop demo:
+> python3 image_gradcam_demo.py
 
-```
-pip install -r requirements.txt
-```
+### Make inference on single images:
+> python3 image_emotion_gender_demo.py <image_path>
 
+e.g.
 
-## News
+> python3 image_emotion_gender_demo.py ../images/test_image.jpg
 
-[22.07.10]: Add source code and demo.
+### Running with Docker
 
-[22.07.07]: OPEN official pytorch version of AVCE_FER.
+With a few steps one can get its own face classification and detection running. Follow the commands below:
 
+* ```docker pull ekholabs/face-classifier```
+* ```docker run -d -p 8084:8084 --name=face-classifier ekholabs/face-classifier```
+* ```curl -v -F image=@[path_to_image]  http://localhost:8084/classifyImage > image.png```
 
-## Datasets
-
-1. Download three public benchmarks for training and evaluation (I cannot upload datasets due to the copyright issue).
-
-  - [AffectNet](http://mohammadmahoor.com/affectnet/)
-  - [Aff-wild](https://ibug.doc.ic.ac.uk/resources/first-affect-wild-challenge/) 
-  - [Aff-wild2](https://ibug.doc.ic.ac.uk/resources/aff-wild2/)
-  - [AFEW-VA](https://ibug.doc.ic.ac.uk/resources/afew-va-database/)
- 
- (For more details visit [website](https://ibug.doc.ic.ac.uk/))
-
-2. Follow preprocessing rules for each dataset by referring pytorch official [custom dataset tutorial](https://pytorch.org/tutorials/beginner/data_loading_tutorial.html).
+### To train previous/new models for emotion classification:
 
 
-## Pretrained weights
+* Download the fer2013.tar.gz file from [here](https://www.kaggle.com/c/challenges-in-representation-learning-facial-expression-recognition-challenge/data)
 
-* Check `pretrained_weights` folder.
+* Move the downloaded file to the datasets directory inside this repository.
 
-  - Weights are trained on AFEW-VA dataset.
-  
-  - Weights for __demo__ are trained on multiple VA database (please refer [here](https://github.com/kdhht2334/AVCE_FER/tree/main/AVCE_demo))
+* Untar the file:
+> tar -xzf fer2013.tar
 
+* Run the train_emotion_classification.py file
+> python3 train_emotion_classifier.py
 
-## Run
+### To train previous/new models for gender classification:
 
-1. Go to `/src`.
+* Download the imdb_crop.tar file from [here](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/) (It's the 7GB button with the tittle Download faces only).
 
-2. Train AVCE.
+* Move the downloaded file to the datasets directory inside this repository.
 
-3. (Or) Execute `run.sh`
+* Untar the file:
+> tar -xfv imdb_crop.tar
 
-```python
-CUDA_VISIBLE_DEVICES=0 python main.py --freq 250 --model alexnet --online_tracker 1 --data_path <data_path> --save_path <save_path>
-```
+* Run the train_gender_classification.py file
+> python3 train_gender_classifier.py
 
-| Arguments | Description
-| :-------- | :--------
-| freq | Parameter saving frequency.
-| model | CNN model for backbone. Choose from 'alexnet', and 'resnet18'.
-| online_tracker | Wandb on/off.
-| data_path | Path to load facial dataset.
-| save_path | Path to save weights.
-
-
-
-## Real-time demo
-
-1. Go to `/AVCE_demo`.
-
-2. Run `main.py`.
-
-  - Facial detection and AV FER functionalities are equipped.
-  - Before that, you have to train and save `Encoder.t7` and `FC_layer.t7`.
-
-
-## Citation
-
-	@inproceedings{kim2022emotion,
-    	title={Emotion-aware Multi-view Contrastive Learning for Facial Emotion Recognition},
-    	author={Kim, Daeha and Song, Byung Cheol},
-    	booktitle={European Conference on Computer Vision},
-    	pages={178--195},
-    	year={2022},
-    	organization={Springer}
-  }
-
-
-### Contact
-If you have any questions, feel free to contact me at `kdhht5022@gmail.com`.
