@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 # Ruta de la fuente personalizada
-custom_font_path = "/home/victorma/Proyecto_IHC/src/fonts/Outfit-Medium.ttf" #Cambien la direccion esta por defecto la que tengo para la fuente
+custom_font_path = "./fonts/Outfit-Medium.ttf" #Cambien la direccion esta por defecto la que tengo para la fuente
 # Configuración y carga de modelos
 detection_model_path = '../trained_models/detection_models/haarcascade_frontalface_default.xml'
 emotion_model_path = '../trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
@@ -343,7 +343,7 @@ while True:
 
         # Registrar emociones cada 5 segundos
         current_time = time.time()
-        if current_time - last_record_time >= 5:  # Verifica si han pasado 5 segundos
+        if current_time - last_record_time >= 1:  # Verifica si han pasado 5 segundos
             emotions_record.append((emotion_text, emotion_probability, datetime.now().strftime('%H:%M:%S')))
             last_record_time = current_time  # Actualiza el tiempo del último registro
 
