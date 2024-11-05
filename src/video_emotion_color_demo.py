@@ -43,12 +43,12 @@ class PDFReport(FPDF):
         self.add_page()
         # Fondo superior
         self.set_fill_color(*self.primary_color)
-        self.rect(0, 0, 210, 100, 'F')
+        self.rect(0, 0, 210, 60, 'F')
         
         # Logo o título principal
         self.set_font("CustomFont", "", 32)
         self.set_text_color(255, 255, 255)
-        self.set_y(40)
+        self.set_y(12)
         self.cell(0, 20, "Análisis de Emociones", ln=True, align="C")
         
         # Subtítulo
@@ -56,13 +56,13 @@ class PDFReport(FPDF):
         self.cell(0, 10, "Reporte Detallado", ln=True, align="C")
         
         # Información de fecha
-        self.set_y(120)
+        self.set_y(66)
         self.set_text_color(*self.secondary_color)
         self.set_font("CustomFont", "", 12)
         self.cell(0, 10, f"Generado el: {datetime.now().strftime('%d de %B, %Y')}", ln=True, align="C")
         
         # Descripción
-        self.set_y(150)
+        self.set_y(80)
         self.set_font("CustomFont", "", 11)
 
         self.section_title("Resumen del Reporte: ")
@@ -121,12 +121,16 @@ class PDFReport(FPDF):
         self.ln(5)
         self.set_font("CustomFont", "", 9)
 
+        self.set_fill_color(*self.primary_color)
         # Cabecera de la tabla
-        self.cell(40, 10, "Hora", 1, 0, "C")
-        self.cell(40, 10, "Emoción", 1, 0, "C")
-        self.cell(40, 10, "Probabilidad", 1, 0, "C")
-        self.cell(60, 10, "Tipo de Evento", 1, 1, "C")
+        self.set_text_color(255, 255, 255)
+        self.cell(40, 10, "Hora", 1, 0, "C", fill=True)
+        self.cell(40, 10, "Emoción", 1, 0, "C", fill=True)
+        self.cell(40, 10, "Probabilidad", 1, 0, "C", fill=True)
+        self.cell(60, 10, "Tipo de Evento", 1, 1, "C", fill=True)
 
+        self.set_fill_color(*self.light_bg)
+        self.set_text_color(0, 0, 0)
         # Filas de la tabla
         for event in events:
             self.cell(40, 10, event[0], 1, 0, "C")
@@ -141,11 +145,15 @@ class PDFReport(FPDF):
         self.ln(5)
         self.set_font("CustomFont", "", 9)
 
+        self.set_fill_color(*self.primary_color)
         # Cabecera de la tabla
-        self.cell(60, 10, "Intervalo de Tiempo", 1, 0, "C")
-        self.cell(60, 10, "Emoción Dominante", 1, 0, "C")
-        self.cell(60, 10, "Promedio de Probabilidad", 1, 1, "C")
+        self.set_text_color(255, 255, 255)
+        self.cell(60, 10, "Intervalo de Tiempo", 1, 0, "C", fill=True)
+        self.cell(60, 10, "Emoción Dominante", 1, 0, "C", fill=True)
+        self.cell(60, 10, "Promedio de Probabilidad", 1, 1, "C", fill=True)
 
+        self.set_fill_color(*self.light_bg)
+        self.set_text_color(0, 0, 0)
         # Filas de la tabla
         for cluster in clusters:
             self.cell(60, 10, cluster[0], 1, 0, "C")
