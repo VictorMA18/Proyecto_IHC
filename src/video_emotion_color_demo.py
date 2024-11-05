@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 # Ruta de la fuente personalizada
-custom_font_path = "/home/victorma/React-native-apps/HuellitasHogar/assets/fonts/Outfit-Medium.ttf"
-
+custom_font_path = "/home/victorma/Proyecto_IHC/src/fonts/Outfit-Medium.ttf" #Cambien la direccion esta por defecto la que tengo para la fuente
 # Configuración y carga de modelos
 detection_model_path = '../trained_models/detection_models/haarcascade_frontalface_default.xml'
 emotion_model_path = '../trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
