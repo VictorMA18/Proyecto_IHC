@@ -1,22 +1,35 @@
-from fpdf import FPDF
-from statistics import mode
+import tkinter as tk
+from tkinter import Label
+from PIL import Image, ImageTk
 import cv2
+from statistics import mode
 from keras.models import load_model
 import numpy as np
+import time
 from datetime import datetime
 import signal
 import sys
-from utils.datasets import get_labels
-from utils.inference import detect_faces, draw_text, draw_bounding_box, apply_offsets, load_detection_model
-from utils.preprocessor import preprocess_input
-import time
-import matplotlib.pyplot as plt
 from collections import Counter
+from fpdf import FPDF
+import matplotlib.pyplot as plt
+
+# Importaciones personalizadas
+from utils.datasets import get_labels
+from utils.inference import (
+    detect_faces,
+    draw_text,
+    draw_bounding_box,
+    apply_offsets,
+    load_detection_model
+)
+from utils.preprocessor import preprocess_input
 
 # Configuración y carga de modelos
 detection_model_path = '../trained_models/detection_models/haarcascade_frontalface_default.xml'
 emotion_model_path = '../trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
 emotion_labels = get_labels('fer2013')
+
+# Carga de modelos
 face_detection = load_detection_model(detection_model_path)
 emotion_classifier = load_model(emotion_model_path, compile=False)
 emotion_target_size = emotion_classifier.input_shape[1:3]
@@ -24,8 +37,12 @@ emotion_target_size = emotion_classifier.input_shape[1:3]
 # Hiperparámetros
 frame_window = 10
 emotion_offsets = (20, 40)
+
+# Variables para almacenar datos
 emotion_window = []
 emotions_record = []
+emotion = [0, 0, 0, 0, 0]  # [Angry, Sad, Happy, Surprise, Neutral]
+total_emotions = 0
 
 # Crear el PDF
 class PDFReport(FPDF):
@@ -103,7 +120,6 @@ class PDFReport(FPDF):
         self.ln(5)
         self.set_text_color(*self.secondary_color)
 
-
     def add_emotion_entry(self, emotion, probability, timestamp):
         self.set_font("Times", "", 9)
         self.set_text_color(0, 0, 0)
@@ -161,7 +177,7 @@ class PDFReport(FPDF):
     def add_recommendations(self):
         self.section_title("Recomendaciones: ")
         self.set_font("Times", "", 9)
-        # Analiza las emociones registradas|
+        # Analiza las emociones registradas
         negative_emotions = [e for e in emotions_record if e[0] in ['sad', 'angry', 'fear']]
         if len(negative_emotions) > 0:
             self.cell(0, 10, "Se detectaron emociones negativas con frecuencia. Se sugiere:", ln=True)
@@ -174,7 +190,6 @@ class PDFReport(FPDF):
         self.ln(10)
     
     def add_summary(self):
-
         self.set_font("Times", "", 9)
         # Rango de fechas y emociones predominantes
         start_date = emotions_record[0][2] if emotions_record else "N/A"
@@ -184,8 +199,8 @@ class PDFReport(FPDF):
 
         self.cell(0, 10, f"Rango de fechas: {start_date} - {end_date}", ln=True)
         self.cell(0, 10, "Emociones predominantes:", ln=True)
-        for emotion, count in predominant_emotions:
-            self.cell(0, 10, f"{emotion.capitalize()}: {count} veces", ln=True)
+        for emotion_item, count in predominant_emotions:
+            self.cell(0, 10, f"{emotion_item.capitalize()}: {count} veces", ln=True)
 
         self.ln(3)
     
@@ -196,9 +211,9 @@ class PDFReport(FPDF):
         self.set_font("Times", "", 9)
         self.section_title("Emociones detectadas durante la sesión:")
         self.ln(3)
-        
 
-        for emotion, probability, timestamp in emotions_record:
+        for emotion_entry in emotions_record:
+            emotion, probability, timestamp = emotion_entry
             self.add_emotion_entry(emotion, probability, timestamp)
 
         self.add_summary()  # Agrega el resumen al inicio
@@ -216,37 +231,38 @@ class PDFReport(FPDF):
 
         self.add_recommendations()  # Agrega las recomendaciones al final
 
-#Grafico
+# Función para generar gráficos
 def generate_emotion_analysis_charts():
     # Gráfico de barras de frecuencia de emociones
     emotions = [e[0] for e in emotions_record]
-    emotion_counts = Counter(emotions)
-    labels, values = zip(*emotion_counts.items())
+    if emotions:
+        emotion_counts = Counter(emotions)
+        labels, values = zip(*emotion_counts.items())
 
-    plt.figure(figsize=(8, 4))
-    plt.bar(labels, values, color="skyblue")
-    plt.title("Frecuencia de Emociones")
-    plt.xlabel("Emociones")
-    plt.ylabel("Frecuencia")
-    plt.savefig("emotion_bars.png")
-    plt.close()
+        plt.figure(figsize=(8, 4))
+        plt.bar(labels, values, color="skyblue")
+        plt.title("Frecuencia de Emociones")
+        plt.xlabel("Emociones")
+        plt.ylabel("Frecuencia")
+        plt.savefig("emotion_bars.png")
+        plt.close()
 
-    # Gráfico de línea temporal de emociones
-    timestamps = [e[2] for e in emotions_record]
-    probabilities = [e[1] for e in emotions_record]
+        # Gráfico de línea temporal de emociones
+        timestamps = [e[2] for e in emotions_record]
+        probabilities = [e[1] for e in emotions_record]
 
-    plt.figure(figsize=(8, 4))
-    plt.plot(timestamps, probabilities, label="Probabilidad", color="purple")
-    plt.title("Probabilidad de Emociones a lo Largo del Tiempo")
-    plt.xlabel("Tiempo")
-    plt.ylabel("Probabilidad")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig("emotion_timeline.png")
-    plt.close()
+        plt.figure(figsize=(8, 4))
+        plt.plot(timestamps, probabilities, label="Probabilidad", color="purple")
+        plt.title("Probabilidad de Emociones a lo Largo del Tiempo")
+        plt.xlabel("Tiempo")
+        plt.ylabel("Probabilidad")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig("emotion_timeline.png")
+        plt.close()
 
+# Función para generar eventos destacados
 def generate_event_highlights():
-    # Generar una lista de eventos destacados con el formato (hora, emoción, probabilidad, tipo de evento)
     events = []
     for i, (emotion, probability, timestamp) in enumerate(emotions_record):
         if i == 0 or abs(probability - emotions_record[i - 1][1]) > 0.3:
@@ -254,8 +270,8 @@ def generate_event_highlights():
             events.append((timestamp, emotion, probability, event_type))
     return events
 
+# Función para generar clústeres de emociones
 def generate_emotion_clusters():
-    # Crear clústeres por intervalo de tiempo y calcular la emoción dominante y su probabilidad promedio
     interval = 5 * 60  # Intervalo en segundos (5 minutos)
     clusters = []
     current_cluster = []
@@ -293,8 +309,8 @@ def generate_emotion_clusters():
     
     return clusters
 
-# Manejo de salida
-def handle_exit(signal, frame):
+# Manejo de salida y generación de reporte
+def handle_exit(signal_received, frame):
     print("\nInterrupción detectada. Generando reporte...")
     pdf = PDFReport()
     pdf.generate_pdf_report()
@@ -302,28 +318,77 @@ def handle_exit(signal, frame):
     print("Reporte generado: reporte_emociones.pdf")
     sys.exit(0)
 
+# Configurar señal para manejar interrupciones (Ctrl+C)
 signal.signal(signal.SIGINT, handle_exit)
 
-# Captura de video
-cv2.namedWindow('window_frame')
-video_capture = cv2.VideoCapture(0)
+# Inicialización de Tkinter
+root = tk.Tk()
+root.title("Detector de Emociones")
 
-# Mantén una variable para almacenar el último tiempo de registro
-last_record_time = time.time()
+# Crear un frame para el stream de video
+video_frame = tk.Frame(root)
+video_frame.pack(side="left")
 
-# Ajusta el bucle de captura de video 
-# 
-# 
-while True:
-    bgr_image = video_capture.read()[1]
+# Crear una etiqueta para mostrar el stream de video
+video_label = Label(video_frame)
+video_label.pack()
+
+# Etiqueta para mostrar el tiempo de ejecución
+time_label = tk.Label(root, text="Tiempo de ejecución: 0 segundos", font=("Arial", 16))
+time_label.pack(pady=20)
+
+# Crear etiquetas para mostrar las emociones
+text_label0 = Label(root, text="Angry = 0%", font=("Arial", 24))
+text_label0.pack()
+text_label1 = Label(root, text="Sad = 0%", font=("Arial", 24))
+text_label1.pack()
+text_label2 = Label(root, text="Happy = 0%", font=("Arial", 24))
+text_label2.pack()
+text_label3 = Label(root, text="Surprise = 0%", font=("Arial", 24))
+text_label3.pack()
+text_label4 = Label(root, text="Neutral = 0%", font=("Arial", 24))
+text_label4.pack()
+
+# Tiempo de inicio
+start_time = time.time()
+
+# Función para actualizar el tiempo de ejecución
+def update_time():
+    elapsed_time = int(time.time() - start_time)
+    time_label.config(text=f"Tiempo de ejecución: {elapsed_time} segundos")
+    root.after(1000, update_time)
+
+# Función para actualizar las etiquetas de emociones
+def update_emotion_labels():
+    global total_emotions
+    if total_emotions > 0:
+        text_label0.config(text=f"Angry = {emotion[0] / total_emotions * 100:.2f}%")
+        text_label1.config(text=f"Sad = {emotion[1] / total_emotions * 100:.2f}%")
+        text_label2.config(text=f"Happy = {emotion[2] / total_emotions * 100:.2f}%")
+        text_label3.config(text=f"Surprise = {emotion[3] / total_emotions * 100:.2f}%")
+        text_label4.config(text=f"Neutral = {emotion[4] / total_emotions * 100:.2f}%")
+    else:
+        text_label0.config(text="Angry = 0%")
+        text_label1.config(text="Sad = 0%")
+        text_label2.config(text="Happy = 0%")
+        text_label3.config(text="Surprise = 0%")
+        text_label4.config(text="Neutral = 0%")
+    root.after(1000, update_emotion_labels)
+
+# Función para actualizar el frame de video
+def update_frame():
+    global total_emotions
+    ret, bgr_image = video_capture.read()
+    if not ret:
+        return
+    
     gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
-    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)  # Convertir a RGB antes de mostrar
     faces = detect_faces(face_detection, gray_image)
 
     for face_coordinates in faces:
         x1, x2, y1, y2 = apply_offsets(face_coordinates, emotion_offsets)
         gray_face = gray_image[y1:y2, x1:x2]
-        
         try:
             gray_face = cv2.resize(gray_face, (emotion_target_size))
         except:
@@ -338,40 +403,82 @@ while True:
         emotion_text = emotion_labels[emotion_label_arg]
         emotion_window.append(emotion_text)
 
-        # Registrar emociones cada 5 segundos
-        current_time = time.time()
-        if current_time - last_record_time >= 1:  # Verifica si han pasado 5 segundos
-            emotions_record.append((emotion_text, emotion_probability, datetime.now().strftime('%H:%M:%S')))
-            last_record_time = current_time  # Actualiza el tiempo del último registro
-
         if len(emotion_window) > frame_window:
             emotion_window.pop(0)
-
         try:
             emotion_mode = mode(emotion_window)
         except:
             continue
 
-        color = emotion_probability * np.asarray((255, 0, 0)) if emotion_text == 'angry' else \
-                emotion_probability * np.asarray((0, 0, 255)) if emotion_text == 'sad' else \
-                emotion_probability * np.asarray((255, 255, 0)) if emotion_text == 'happy' else \
-                emotion_probability * np.asarray((0, 255, 255)) if emotion_text == 'surprise' else \
-                emotion_probability * np.asarray((0, 255, 0))
+        if emotion_text == 'angry':
+            color = emotion_probability * np.asarray((255, 0, 0))
+            emotion[0] += 1
+        elif emotion_text == 'sad':
+            color = emotion_probability * np.asarray((0, 0, 255))
+            emotion[1] += 1
+        elif emotion_text == 'happy':
+            color = emotion_probability * np.asarray((255, 255, 0))
+            emotion[2] += 1
+        elif emotion_text == 'surprise':
+            color = emotion_probability * np.asarray((0, 255, 255))
+            emotion[3] += 1
+        elif emotion_text == 'neutral':
+            color = emotion_probability * np.asarray((120, 120, 120))
+            emotion[4] += 1
+        else:
+            color = emotion_probability * np.asarray((0, 255, 0))
+        
+        # Actualizar el total de emociones
+        total_emotions = np.sum(emotion)
+        
+        # Registrar emociones cada segundo
+        current_time = time.time()
+        if current_time - last_record_time[0] >= 1:  # Verifica si ha pasado 1 segundo
+            emotions_record.append((emotion_text, emotion_probability, datetime.now().strftime('%H:%M:%S')))
+            last_record_time[0] = current_time  # Actualiza el tiempo del último registro
 
         color = color.astype(int).tolist()
         draw_bounding_box(face_coordinates, rgb_image, color)
         draw_text(face_coordinates, rgb_image, emotion_mode, color, 0, -45, 1, 1)
 
-    bgr_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
-    cv2.imshow('window_frame', bgr_image)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # Convertir la imagen RGB a formato ImageTk
+    img = Image.fromarray(rgb_image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    video_label.imgtk = imgtk
+    video_label.configure(image=imgtk)
+    video_label.after(10, update_frame)
 
+# Variables para manejar el tiempo de registro
+last_record_time = [time.time()]  # Usar lista para permitir modificación dentro de la función
+
+# Iniciar la captura de video
+video_capture = cv2.VideoCapture(0)
+if not video_capture.isOpened():
+    print("Error: No se pudo abrir la cámara.")
+    sys.exit()
+
+# Iniciar las actualizaciones
+update_frame()
+update_time()
+update_emotion_labels()
+
+# Función para cerrar la ventana y generar el reporte al cerrar la interfaz
+def on_closing():
+    print("Cerrando la aplicación. Generando reporte...")
+    pdf = PDFReport()
+    pdf.generate_pdf_report()
+    pdf.output("reporte_emociones.pdf")
+    print("Reporte generado: reporte_emociones.pdf")
+    video_capture.release()
+    cv2.destroyAllWindows()
+    root.destroy()
+    sys.exit()
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
+
+# Ejecutar la interfaz gráfica
+root.mainloop()
+
+# Asegurarse de liberar la captura de video al finalizar
 video_capture.release()
 cv2.destroyAllWindows()
-
-# Generar el reporte si se cierra con 'q'
-pdf = PDFReport()
-pdf.generate_pdf_report()
-pdf.output("reporte_emociones.pdf")
-print("Reporte generado: reporte_emociones.pdf")
