@@ -13,8 +13,6 @@ import time
 import matplotlib.pyplot as plt
 from collections import Counter
 
-# Ruta de la fuente personalizada
-custom_font_path = "./fonts/Outfit-Medium.ttf" #Cambien la direccion esta por defecto la que tengo para la fuente
 # Configuración y carga de modelos
 detection_model_path = '../trained_models/detection_models/haarcascade_frontalface_default.xml'
 emotion_model_path = '../trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5'
@@ -33,7 +31,6 @@ emotions_record = []
 class PDFReport(FPDF):
     def __init__(self):
         super().__init__()
-        self.add_font("CustomFont", "", custom_font_path, uni=True)
         self.primary_color = (41, 128, 185)    # Azul
         self.secondary_color = (44, 62, 80)    # Gris oscuro
         self.accent_color = (46, 204, 113)     # Verde
@@ -46,27 +43,27 @@ class PDFReport(FPDF):
         self.rect(0, 0, 210, 60, 'F')
         
         # Logo o título principal
-        self.set_font("CustomFont", "", 32)
+        self.set_font("Times", "", 32)
         self.set_text_color(255, 255, 255)
         self.set_y(12)
         self.cell(0, 20, "Análisis de Emociones", ln=True, align="C")
         
         # Subtítulo
-        self.set_font("CustomFont", "", 16)
+        self.set_font("Times", "", 16)
         self.cell(0, 10, "Reporte Detallado", ln=True, align="C")
         
         # Información de fecha
         self.set_y(66)
         self.set_text_color(*self.secondary_color)
-        self.set_font("CustomFont", "", 12)
+        self.set_font("Times", "", 12)
         self.cell(0, 10, f"Generado el: {datetime.now().strftime('%d de %B, %Y')}", ln=True, align="C")
         
         # Descripción
         self.set_y(80)
-        self.set_font("CustomFont", "", 11)
+        self.set_font("Times", "", 11)
 
         self.section_title("Resumen del Reporte: ")
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
         self.multi_cell(0, 8, ("Este reporte presenta un análisis comprehensivo de las emociones detectadas "
                               "durante la sesión de observación. Incluye análisis estadísticos, "
                               "visualizaciones y patrones emocionales identificados."), align="C")
@@ -79,7 +76,7 @@ class PDFReport(FPDF):
             
             # Título de la página
             self.set_y(20)
-            self.set_font("CustomFont", "", 12)
+            self.set_font("Times", "", 12)
             self.set_text_color(*self.secondary_color)
             self.cell(0, 10, "Reporte de Análisis de Emociones", ln=True, align="L")
             
@@ -89,7 +86,7 @@ class PDFReport(FPDF):
 
     def footer(self):
         self.set_y(-20)
-        self.set_font("CustomFont", "", 8)
+        self.set_font("Times", "", 8)
         self.set_text_color(*self.secondary_color)
         
         # Línea separadora
@@ -101,14 +98,14 @@ class PDFReport(FPDF):
     def section_title(self, title):
         self.set_fill_color(*self.primary_color)
         self.set_text_color(255, 255, 255)
-        self.set_font("CustomFont", "", 14)
+        self.set_font("Times", "", 14)
         self.cell(0, 10, f"  {title}", ln=True, fill=True)
         self.ln(5)
         self.set_text_color(*self.secondary_color)
 
 
     def add_emotion_entry(self, emotion, probability, timestamp):
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
         self.set_text_color(0, 0, 0)
         self.cell(0, 10, f"Hora: {timestamp} - Emoción: {emotion} - Probabilidad: {probability:.2f}", ln=True)
 
@@ -116,10 +113,10 @@ class PDFReport(FPDF):
         self.image(image_path, x=x, y=y, w=w)
 
     def add_event_highlights_table(self, events):
-        self.set_font("CustomFont", "", 10)
+        self.set_font("Times", "", 10)
         self.cell(0, 10, "Análisis de Eventos Destacados:", ln=True)
         self.ln(5)
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
 
         self.set_fill_color(*self.primary_color)
         # Cabecera de la tabla
@@ -140,10 +137,10 @@ class PDFReport(FPDF):
         self.ln(10)
 
     def add_emotion_clusters_table(self, clusters):
-        self.set_font("CustomFont", "", 10)
+        self.set_font("Times", "", 10)
         self.cell(0, 10, "Clústeres de Emociones por Segmento de Tiempo:", ln=True)
         self.ln(5)
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
 
         self.set_fill_color(*self.primary_color)
         # Cabecera de la tabla
@@ -163,7 +160,7 @@ class PDFReport(FPDF):
 
     def add_recommendations(self):
         self.section_title("Recomendaciones: ")
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
         # Analiza las emociones registradas|
         negative_emotions = [e for e in emotions_record if e[0] in ['sad', 'angry', 'fear']]
         if len(negative_emotions) > 0:
@@ -178,7 +175,7 @@ class PDFReport(FPDF):
     
     def add_summary(self):
 
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
         # Rango de fechas y emociones predominantes
         start_date = emotions_record[0][2] if emotions_record else "N/A"
         end_date = emotions_record[-1][2] if emotions_record else "N/A"
@@ -196,7 +193,7 @@ class PDFReport(FPDF):
         self.cover_page()
         self.ln(3)
 
-        self.set_font("CustomFont", "", 9)
+        self.set_font("Times", "", 9)
         self.section_title("Emociones detectadas durante la sesión:")
         self.ln(3)
         
