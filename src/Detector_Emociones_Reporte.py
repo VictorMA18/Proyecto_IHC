@@ -15,6 +15,7 @@ import sys
 from collections import Counter
 from fpdf import FPDF
 import matplotlib.pyplot as plt
+import subprocess
 
 # Importaciones personalizadas
 from utils.datasets import get_labels
@@ -340,9 +341,17 @@ video_label = Label(video_frame)
 video_label.pack()
 
 # Barra superior
+
+def volver_al_inicio():
+    # Cerrar la ventana actual
+    root.destroy()
+    # Ejecutar el script de la ventana inicial
+    subprocess.Popen([r"C:\Users\Bryan\Documents\face_classification-master\venv\Scripts\python", 
+                      r"C:\Users\Bryan\Documents\Proyecto_IHC\Proyecto_IHC\src\Inicio.py"])
+
 top_frame = Ctk.CTkFrame(root, height=50, fg_color="#7DA4E6")
 top_frame.pack(fill="x")
-back_button = Ctk.CTkButton(top_frame, text="←", font=("Arial", 20, "bold"), width=40, command=lambda: print("Volver"))
+back_button = Ctk.CTkButton(top_frame, text="←", font=("Arial", 20, "bold"), width=40, command=volver_al_inicio)
 refresh_button = Ctk.CTkButton(top_frame, text="⟳", font=("Arial", 20, "bold") , width=40, command=lambda: print("Actualizar"))
 title_label = Ctk.CTkLabel(top_frame, text="FACIAL", text_color="white", font=("Arial", 20, "bold"))
 
