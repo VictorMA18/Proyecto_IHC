@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import Label
+import customtkinter as Ctk
+import os
 from PIL import Image, ImageTk
 import cv2
 from statistics import mode
@@ -314,15 +316,18 @@ def handle_exit(signal_received, frame):
     print("\nInterrupción detectada. Generando reporte...")
     pdf = PDFReport()
     pdf.generate_pdf_report()
-    pdf.output("reporte_emociones.pdf")
-    print("Reporte generado: reporte_emociones.pdf")
+    pdf.output("Reporte_emociones.pdf")
+    print("Reporte generado: Reporte_emociones.pdf")
     sys.exit(0)
 
 # Configurar señal para manejar interrupciones (Ctrl+C)
 signal.signal(signal.SIGINT, handle_exit)
 
 # Inicialización de Tkinter
-root = tk.Tk()
+root = Ctk.CTk()
+Ctk.set_appearance_mode("light")
+Ctk.set_default_color_theme("dark-blue")
+root.configure(fg_color="#B2DFFF")
 root.title("Detector de Emociones")
 
 # Crear un frame para el stream de video
@@ -333,46 +338,103 @@ video_frame.pack(side="left")
 video_label = Label(video_frame)
 video_label.pack()
 
-# Etiqueta para mostrar el tiempo de ejecución
-time_label = tk.Label(root, text="Tiempo de ejecución: 0 segundos", font=("Arial", 16))
-time_label.pack(pady=20)
+# Barra superior
+top_frame = Ctk.CTkFrame(root, height=50, fg_color="#7DA4E6")
+top_frame.pack(fill="x")
+back_button = Ctk.CTkButton(top_frame, text="←", font=("Arial", 20, "bold"), width=40, command=lambda: print("Volver"))
+refresh_button = Ctk.CTkButton(top_frame, text="⟳", font=("Arial", 20, "bold") , width=40, command=lambda: print("Actualizar"))
+title_label = Ctk.CTkLabel(top_frame, text="FACIAL", text_color="white", font=("Arial", 20, "bold"))
+
+back_button.pack(side="left", padx=10, pady=5)
+refresh_button.pack(side="left", padx=10, pady=5)
+title_label.pack(side="right", padx=15)
+
+# Cronómetro
+cronometro_frame = Ctk.CTkFrame(root, fg_color="#1E80D1")
+cronometro_frame.pack(pady=10, padx=10, fill="x")
+
+cronometro_label = Ctk.CTkLabel(cronometro_frame, text="Tiempo de ejecución: 0 segundos", font=("Arial", 24, "bold"), text_color="#FFFFFF")
+cronometro_label.pack(pady=7,padx=40)
+
+# Título "Estadísticas"
+stats_label = Ctk.CTkLabel(root, text="ESTADÍSTICAS", font=("Arial", 20, "bold"), text_color="black")
+stats_label.pack(pady=7)
+
+# Tabla de estadísticas
+stats_frame = Ctk.CTkFrame(root, fg_color="#E6F0FA")
+stats_frame.pack(pady=5, padx=20, fill="x")
+
+headers = Ctk.CTkLabel(stats_frame, text="Emociones             %", font=("Arial", 24, "bold"))
+headers.pack(pady=10, padx=40, anchor="center")
 
 # Crear etiquetas para mostrar las emociones
-text_label0 = Label(root, text="Angry = 0%", font=("Arial", 24))
-text_label0.pack()
-text_label1 = Label(root, text="Sad = 0%", font=("Arial", 24))
-text_label1.pack()
-text_label2 = Label(root, text="Happy = 0%", font=("Arial", 24))
-text_label2.pack()
-text_label3 = Label(root, text="Surprise = 0%", font=("Arial", 24))
-text_label3.pack()
-text_label4 = Label(root, text="Neutral = 0%", font=("Arial", 24))
-text_label4.pack()
+text_label0 = Ctk.CTkLabel(root, text="😠 Enojo             0%", font=("Arial", 24))
+text_label0.pack(pady=2)
+text_label1 = Ctk.CTkLabel(root, text="😢 Tristeza           0%", font=("Arial", 24))
+text_label1.pack(pady=2)
+text_label2 = Ctk.CTkLabel(root, text="😊 Alegría           0%", font=("Arial", 24))
+text_label2.pack(pady=2)
+text_label3 = Ctk.CTkLabel(root, text="😲 Sorpresa            0%", font=("Arial", 24))
+text_label3.pack(pady=2)
+text_label4 = Ctk.CTkLabel(root, text="😐 Neutral           0%", font=("Arial", 24))
+text_label4.pack(pady=2)
 
+file_path = os.path.dirname(os.path.realpath(__file__)) 
+image_pdf = Ctk.CTkImage(Image.open(file_path + "/assets/download.png"), size=(35,35))
+
+
+def generar_reporte():
+    try:
+        pdf = PDFReport()
+        
+        pdf.generate_pdf_report()
+        
+        # Guardar el archivo PDF
+        nombre_archivo = f"Reporte_Emociones_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        pdf.output(nombre_archivo)
+        
+        # Mostrar confirmación  
+        tk.messagebox.showinfo("Reporte Generado", f"Reporte guardado como:\n{nombre_archivo}")
+    except Exception as e:
+        tk.messagebox.showerror("Error", f"No se pudo generar el reporte:\n{str(e)}")
+
+text_label5 = Label(root, text="Generar Reporte" , background="#B2DFFF", font=("Arial", 20, "bold"))
+text_label5.pack(pady=8)
+boton_reporte = Ctk.CTkButton(master=root, 
+                                        corner_radius=24,
+                                        image=image_pdf,
+                                        width=60,
+                                        height=50,
+                                        fg_color="#FF8000",
+                                        text="Descargar", 
+                                        font=("Arial", 21, "bold"),
+                                        border_spacing=10,
+                                        command=generar_reporte)
+boton_reporte.pack(padx=5,pady=7)
 # Tiempo de inicio
 start_time = time.time()
 
 # Función para actualizar el tiempo de ejecución
 def update_time():
     elapsed_time = int(time.time() - start_time)
-    time_label.config(text=f"Tiempo de ejecución: {elapsed_time} segundos")
+    cronometro_label.configure(text=f"Tiempo de ejecución: {elapsed_time} segundos")
     root.after(1000, update_time)
 
 # Función para actualizar las etiquetas de emociones
 def update_emotion_labels():
     global total_emotions
     if total_emotions > 0:
-        text_label0.config(text=f"Angry = {emotion[0] / total_emotions * 100:.2f}%")
-        text_label1.config(text=f"Sad = {emotion[1] / total_emotions * 100:.2f}%")
-        text_label2.config(text=f"Happy = {emotion[2] / total_emotions * 100:.2f}%")
-        text_label3.config(text=f"Surprise = {emotion[3] / total_emotions * 100:.2f}%")
-        text_label4.config(text=f"Neutral = {emotion[4] / total_emotions * 100:.2f}%")
+        text_label0.configure(text=f"😠 Enojo             {emotion[0] / total_emotions * 100:.2f}%")
+        text_label1.configure(text=f"😢 Tristeza           {emotion[1] / total_emotions * 100:.2f}%")
+        text_label2.configure(text=f"😊 Alegría           {emotion[2] / total_emotions * 100:.2f}%")
+        text_label3.configure(text=f"😲 Sorpresa            {emotion[3] / total_emotions * 100:.2f}%")
+        text_label4.configure(text=f"😐 Neutral           {emotion[4] / total_emotions * 100:.2f}%")
     else:
-        text_label0.config(text="Angry = 0%")
-        text_label1.config(text="Sad = 0%")
-        text_label2.config(text="Happy = 0%")
-        text_label3.config(text="Surprise = 0%")
-        text_label4.config(text="Neutral = 0%")
+        text_label0.configure(text="😠 Enojo             0%")
+        text_label1.configure(text="😢 Tristeza           0%")
+        text_label2.configure(text="😊 Alegría           0%")
+        text_label3.configure(text="😲 Sorpresa            0%")
+        text_label4.configure(text="😐 Neutral           0%")
     root.after(1000, update_emotion_labels)
 
 # Función para actualizar el frame de video
@@ -448,6 +510,7 @@ def update_frame():
     video_label.configure(image=imgtk)
     video_label.after(10, update_frame)
 
+
 # Variables para manejar el tiempo de registro
 last_record_time = [time.time()]  # Usar lista para permitir modificación dentro de la función
 
@@ -467,8 +530,8 @@ def on_closing():
     print("Cerrando la aplicación. Generando reporte...")
     pdf = PDFReport()
     pdf.generate_pdf_report()
-    pdf.output("reporte_emociones.pdf")
-    print("Reporte generado: reporte_emociones.pdf")
+    pdf.output("Reporte_emociones.pdf")
+    print("Reporte generado: Reporte_emociones.pdf")
     video_capture.release()
     cv2.destroyAllWindows()
     root.destroy()
